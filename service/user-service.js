@@ -14,7 +14,10 @@ class UserService {
         const hashPassword = await bcrypt.hash(password, 3);
         const activationLink = uuid.v4();
         const user = await UserModel.create({ email, password: hashPassword, activationLink });
-        await mailService.sendActivationMail(email, activationLink);
+
+        //активация по ссылке
+        // await mailService.sendActivationMail(email, `${process.env.API_URL}/api/activate/${activationLink}`);
+
         const userDto = new UserDto(user);
         const tokens = tokenService.generateTokens({ ...userDto });
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
@@ -25,6 +28,37 @@ class UserService {
         }
 
     };
+
+    async login(email, password) {
+        const user = await UserModel.findOne({ email });
+        if (!user) {
+            // throw Error
+            console.log('polzovatel nenaiden');
+            return {
+                'login': 'no-corrected'
+            }
+        }
+        const isPassEquals = await bcrypt.compare(password, user.password);
+        if (!isPassEquals) {
+            console.log('nekorect password')
+            return {
+                'password': 'no-correct'
+            }
+        }
+        const userDto = new UserDto(user);
+        const tokens = tokenService.generateTokens({ ...userDto });
+        await tokenService.saveToken(userDto.id, tokens.refreshToken);
+
+        return {
+            ...tokens,
+            user: userDto
+        }
+    }
+
+    async logout(refreshToken){
+        const token = await tokenService.removeToken(refrershToken);
+        return token;
+    }
 }
 
 module.exports = new UserService();
