@@ -56,9 +56,22 @@ class UserService {
     }
 
     async logout(refreshToken){
-        const token = await tokenService.removeToken(refrershToken);
+        const token = await tokenService.removeToken(refreshToken);
         return token;
     }
+
+    async refresh(refreshToken){
+        if(!refreshToken){
+            console.log('erorrr- no token')
+        }
+        const userData = tokenService.validateRefreshToken(refreshToken);
+        const tokenFromDb = await tokenService.findToken(refreshToken);
+        if(!userData || tokenFromDb){
+            console.log('NEAVTARIAOZAN');
+        }
+    }
+
+
 }
 
 module.exports = new UserService();
